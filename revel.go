@@ -58,7 +58,7 @@ func getCookie(s revel.Session, sessionKey string, cookiePath string, h func() h
 // SessionFilter is a Revel Filter that retrieves and sets the session cookie.
 // Within Revel, it is available as a Session attribute on Controller instances.
 // The name of the Session cookie is set as CookiePrefix + "_SESSION".
-func SessionFilter(sessionKey string, cookiePath string, h func() hash.Hash, secretKey []byte) func(c *revel.Controller, fc []revel.Filter) {
+func SessionFilter(sessionKey string, cookiePath string, h func() hash.Hash, secretKey []byte) revel.Filter {
 	if cookiePath == "" {
 		cookiePath = "/"
 	} else if !strings.HasPrefix(cookiePath, "/") {
