@@ -42,6 +42,8 @@ func getCookie(s revel.Session, sessionKey string, cookiePath string, h func() h
 	ts := time.Now().Add(30 * time.Minute)
 	values.Set(sso.SESSION_EXPIRE_KEY,
 		strconv.FormatInt(ts.Unix(), 10))
+	values.Set("_TS",
+		strconv.FormatInt(ts.Unix(), 10))
 	sessionData := values.Encode()
 
 	return &http.Cookie{
