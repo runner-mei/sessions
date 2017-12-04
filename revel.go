@@ -1,6 +1,7 @@
 package sessions
 
 import (
+	"errors"
 	"hash"
 	"net/http"
 	"net/url"
@@ -15,10 +16,27 @@ import (
 
 var CookiePath string
 
+func GetValues(c *revel.Controller, sessionKey string, h func() hash.Hash, secretKey []byte) (url.Values, error) {
+	cookie, err := c.Request.Cookie(sessionKey)
+	if err != nil {
+		if err == http.ErrNoCookie {
+			return nil, errors.New("session cookie isn't found")
+		}
+		return nil, err
+	}
+
+	return sso.GetValuesFromString(cookie.GetValue(), func(data, sig string) bool {
+		if secretKey == nil {
+			return true
+		}
+		return sso.Verify(data, sig, h, secretKey)
+	})
+}
+
 // restoreSession returns either the current session, retrieved from the
 // session cookie, or a new session.
-func restoreSession(req *http.Request, sessionKey string, h func() hash.Hash, secretKey []byte) revel.Session {
-	values, err := sso.GetValues(req, sessionKey, h, secretKey)
+func restoreSession(c *revel.Controller, sessionKey string, h func() hash.Hash, secretKey []byte) revel.Session {
+	values, err := GetValues(c, sessionKey, h, secretKey)
 	if err != nil {
 		revel.WARN.Println("Session cookie is read fail, ", err)
 		return make(revel.Session)
@@ -68,7 +86,7 @@ func SessionFilter(sessionKey string, cookiePath string, h func() hash.Hash, sec
 	}
 
 	return func(c *revel.Controller, fc []revel.Filter) {
-		c.Session = restoreSession(c.Request.Request, sessionKey, h, secretKey)
+		c.Session = restoreSession(c, sessionKey, h, secretKey)
 		sessionWasEmpty := len(c.Session) == 0
 
 		// Make session vars available in templates as {{.session.xyz}}
