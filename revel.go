@@ -3,6 +3,7 @@ package sessions
 import (
 	"errors"
 	"hash"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -13,8 +14,6 @@ import (
 
 	"github.com/revel/revel"
 )
-
-var CookiePath string
 
 func GetValues(c *revel.Controller, sessionKey string, h func() hash.Hash, secretKey []byte) (url.Values, error) {
 	cookie, err := c.Request.Cookie(sessionKey)
@@ -38,7 +37,7 @@ func GetValues(c *revel.Controller, sessionKey string, h func() hash.Hash, secre
 func restoreSession(c *revel.Controller, sessionKey string, h func() hash.Hash, secretKey []byte) revel.Session {
 	values, err := GetValues(c, sessionKey, h, secretKey)
 	if err != nil {
-		revel.WARN.Println("Session cookie is read fail, ", err)
+		log.Println("[warn] Session cookie '"+sessionKey+"' is read fail, ", err)
 		return make(revel.Session)
 	}
 
